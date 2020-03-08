@@ -46,7 +46,7 @@ public class RIGCommandReader implements Runnable{
 			} else if(cmd.startsWith("init_rig")) {
 				
 				String tokens[] = cmd.split(" ");
-				// TEST
+				
 				if(tokens.length!=2) 
 					System.out.println("INVALID SYNTAX. USE init_rig [filesystem_name] ");
 				
