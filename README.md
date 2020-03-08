@@ -15,15 +15,25 @@ This repository contains the source code and deployment instructions for the RIG
 ### Commands
 
 #### Startup & Initialize
-Downloads paths for IRODS data-blocks and initializing the RIG graph
+Downloads paths for IRODS data-blocks and initializes the RIG graph.
+
 ```
 init_rig [filesystem_name]
 ```
+#### Query for Data-Blocks
 
-	
+Identifies relevant data-blocks for download - fetches them in the specified location and validates their integrity.
+
+```
+query_rig [fsName] [date=\"yyyy-MM-dd\"] [plotID=p1,p2,p3] [sensor=SENSOR_NAME] [path=PATH_TO_DOWNLOAD]
+```
+
+
 #### Shutdown
 
-1.	gstop
+```
+exit
+```
 
 
 # License
