@@ -13,8 +13,15 @@ This repository contains the source code and deployment instructions for the RHI
 
 Please set the environment variables *IRODS_USER* and *IRODS_PASSWORD* as your irods username and password for the application to connect to CyVerse properly. You may also hardcode these values insode *RIG/src/irods/IRODSManager.java* at line 100 and then rebuild the jar(explained below).
 
+To build the project jar, go to the project's root directory and run the command: 
+
+```
+ant package
+```
+The built jar can be found at **RIG/dist/RHIG-1.0.jar**
+
 ### Containerization
-If you wish to deploy a dockerized container running RHIG, please update the *RIG/Dockerfile* with your CyVerse username and password. Navigate to *RIG* project root and run the following commands from your terminal:
+If you wish to deploy a dockerized container running RHIG, please update the file *RIG/Dockerfile* with your CyVerse username and password. Navigate to *RIG* project root and run the following commands from your terminal:
 ```
 docker build -t rhig .
 ```
@@ -26,17 +33,11 @@ docker run -t -i rhig
 Following this, you can run RHIG commands from your container's terminal (see Commands section).
 
 ## Deployment
-To run your own local SUBTERRA repository monitored by RHIG, run the **RHIG-1.0.jar** file by navigating to the **RIG/dist** directory. Startup the RHIG application by running the **RHIG-1.0.jar** file through the following command:
+To run your own SUBTERRA repository monitored by RHIG locally, run the **RHIG-1.0.jar** file by navigating to the **RIG/dist** directory. Startup the RHIG application by running the **RHIG-1.0.jar** file through the following command:
 ```
 java -cp RHIG-1.0.jar node.RIGMonitor
 ```
 
-To update and build, go to the project's root directory and run the command: 
-
-```
-ant package
-```
-The built jar can be found at **RIG/dist/RHIG-1.0.jar**
 
 ### Commands
 

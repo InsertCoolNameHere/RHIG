@@ -6,7 +6,6 @@
 # Eclipse files
 .project
 .classpath
-.build
 .settings
 .externalToolBuilders
 .metadata
