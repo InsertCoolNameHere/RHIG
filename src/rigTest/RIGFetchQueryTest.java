@@ -55,7 +55,7 @@ public class RIGFetchQueryTest {
 				
 			} else {
 				
-				im.readRemoteDirectory(whereToPut, actPath);
+				im.downloadRemoteDirectory(whereToPut, actPath);
 			}
 		}
 		

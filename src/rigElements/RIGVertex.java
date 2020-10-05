@@ -99,7 +99,7 @@ public class RIGVertex<L extends Comparable<L>, V> {
     public RIGVertex<L, V> getNeighbor(L label) {
         return edges.get(label);
     }
-
+    
     public NavigableMap<L, RIGVertex<L, V>> getNeighborsLessThan(
             L label, boolean inclusive) {
         return edges.headMap(label, inclusive);

@@ -1,5 +1,6 @@
 package events;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -11,11 +12,10 @@ import query.Operation;
 import query.Query;
 import rigFeature.Feature;
 
-public class RigQueryRequest implements Event{
+public class RigUpdateRequest implements Event{
 	
 	private String fsName;
 	private Query query;
-	public boolean downloadOn = false;
 	// DEFAULT PATH
 	private String downloadPath = "/tmp/sapmitra/radix_download/";
 	
@@ -26,11 +26,11 @@ public class RigQueryRequest implements Event{
 		this.fsName = fsName;
 	}
 	
-	
 	//query_rig [fsName] [date=yyyy-MM-dd] [plotID=p1,p2,p3] [sensor=SENSOR_NAME] [path=DOWNLOAD_PATH]
 	//Example: query_rig roots-arizona plotID=20525,20526 path=/s/chopin/b/grad/sapmitra/Desktop/rigTest/
-	public RigQueryRequest(String[] tokens) {
+	public RigUpdateRequest(String[] tokens) {
 		
+		//String tokens[] = command.split(" ");
 		this.fsName = tokens[1];
 		
 		Query q = new Query();
@@ -46,8 +46,11 @@ public class RigQueryRequest implements Event{
 				if(arg.startsWith("path")) {
 					
 					String p = arg.replace("path=", "");
-					downloadPath = p;
-					downloadOn = true;
+					
+					if(p.endsWith(File.separator))
+						downloadPath = p;
+					else
+						downloadPath = p+File.separator;
 					
 				} else if(arg.startsWith("date")) {
 					

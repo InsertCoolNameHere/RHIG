@@ -24,16 +24,23 @@ software, even if advised of the possibility of such damage.
 */
 
 /**
- * @author Max Roselius: mroseliu@rams.colostate.edu
+ * @author Saptashwa Mitra: sapmitra@colostate.edu
  * This class handles all interaction with IRODS. Mostly just inserting data there. As is this code doesn't hammer
  * IRODS services too hard, but if emails are received at radix_subterra@gmail.com complaining of issues, change ""data.iplantcollaborative.org" 
  * to "davos.cyverse.org" below.*/
 package irods;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -43,7 +50,11 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.logging.Logger;
+import java.util.zip.GZIPOutputStream;
 
+import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
+import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
+import org.apache.commons.compress.utils.IOUtils;
 import org.apache.commons.io.FileUtils;
 import org.irods.jargon.core.connection.IRODSAccount;
 import org.irods.jargon.core.exception.DataNotFoundException;
@@ -53,6 +64,8 @@ import org.irods.jargon.core.exception.JargonFileOrCollAlreadyExistsException;
 import org.irods.jargon.core.exception.OverwriteException;
 import org.irods.jargon.core.exception.UnixFileCreateException;
 import org.irods.jargon.core.packinstr.TransferOptions;
+import org.irods.jargon.core.packinstr.TransferOptions.ForceOption;
+import org.irods.jargon.core.pub.BulkFileOperationsAO;
 import org.irods.jargon.core.pub.DataTransferOperations;
 import org.irods.jargon.core.pub.IRODSFileSystem;
 import org.irods.jargon.core.pub.io.IRODSFile;
@@ -83,8 +96,7 @@ public class IRODSManager {
 	
 	public IRODSManager() {	//davos.cyverse.org
 		
-		//logger.setUseParentHandlers(false);
-		account = new IRODSAccount("data.iplantcollaborative.org", 1247, "radix_subterra", "roots&radix2018", "/iplant/home/radix_subterra", "iplant", "");
+		account = new IRODSAccount("data.iplantcollaborative.org", 1247, System.getenv("IRODS_USER"), System.getenv("IRODS_PASSWORD"), "/iplant/home/radix_subterra", "iplant", "");
 		try {
 			filesystem = IRODSFileSystem.instance();
 			fileFactory = filesystem.getIRODSFileFactory(account);
@@ -98,7 +110,7 @@ public class IRODSManager {
 	
 	
 	/**
-	 * 
+	 * NOT IN USE YET 
 	 * @author sapmitra
 	 * @param data ACTUAL DATA TO BE WRITTEN
 	 * @param irodspath path to the file after radix_subterra directory
@@ -136,7 +148,13 @@ public class IRODSManager {
 		}
 	}
 	
-	
+	/**
+	 * NOT IN USE YET
+	 * @author sapmitra
+	 * @param toExport
+	 * @param remoteDirectory
+	 * @throws JargonException
+	 */
 	public void writeRemoteFileAtSpecificPath(File toExport, String remoteDirectory)throws JargonException{
 		TransferOptions opts = new TransferOptions();
 		opts.setComputeAndVerifyChecksumAfterTransfer(true);
@@ -199,7 +217,7 @@ public class IRODSManager {
 	 * @throws JargonException
 	 * @throws IOException 
 	 */
-	public String[] readAllRemoteFiles(String fsName) throws JargonException, IOException{
+	public String[] readAllRemoteFiles(String fsName, String local_repo_path) throws JargonException, IOException{
 		StringBuffer sb = new StringBuffer();
 		
 		TransferOptions opts = new TransferOptions();
@@ -225,7 +243,8 @@ public class IRODSManager {
 			}
 		};
 		
-		File temp = new File("/tmp/sampleData");
+		String temp_rig_dump_path = local_repo_path+File.separator+"tmp";
+		File temp = new File(temp_rig_dump_path);
 		
 		if(temp.exists())
 			FileUtils.deleteDirectory(temp);
@@ -233,20 +252,18 @@ public class IRODSManager {
 		temp.mkdirs();
 		
 		//IRODSFile remoteFile = fileFactory.instanceIRODSFile("plots/");
-		IRODSFile toFetch = fileFactory.instanceIRODSFile(fsName+"/rig");
-		//IRODSFile toFetch = fileFactory.instanceIRODSFile("util/me");
+		IRODSFile toFetch = fileFactory.instanceIRODSFile(fsName+IRODSManager.IRODS_SEPARATOR+"rig");
 		
 		if (!toFetch.exists()) {
-			
 			logger.info("RIKI: NOT EXISTS:"+"/"+fsName+"/rig");
 			return null;
-			//System.out.println("RIKI: NOT EXISTS:"+"/util/me");
-			//Thread.sleep(100);
-			
 		}
+		
 		dataTransferOperationsAO.getOperation(toFetch, temp, tscl, tcb);
 		
-		temp = new File("/tmp/sampleData/rig");
+		dataTransferOperationsAO.closeSessionAndEatExceptions();
+		
+		temp = new File(temp_rig_dump_path+File.separator+"rig");
 		
 		//temp = new File("/tmp/sampleData/me");
 		for(File f : temp.listFiles()) {
@@ -257,65 +274,22 @@ public class IRODSManager {
 		
 		FileUtils.deleteDirectory(temp);
 		
-		String[] paths = sb.toString().split("\\n");
+		//**************SAVING DOWNLOADED RIG PATHS TO A LOCAL FILE********************
+		String local_rig_file = local_repo_path+File.separator+"rig_"+fsName+".txt";
+		String str = sb.toString();
+	    BufferedWriter writer = new BufferedWriter(new FileWriter(local_rig_file));
+	    writer.write(str);
+	    
+	    writer.close();
+		
+		
+		String[] paths = str.split("\\n");
 		logger.info("RIKI: PATHS READ: " + paths.length);
 		
 		return paths;
 		
 	}
 	
-	/**
-	 * DOWNLOAD A FULL DIRECTORY FROM IRODS
-	 * @author sapmitra
-	 * @throws JargonException
-	 * @throws IOException
-	 */
-	public void readRemoteDirectory(String whereToPut, String whatToDownload) throws JargonException, IOException {
-
-		TransferOptions opts = new TransferOptions();
-		//opts.setComputeAndVerifyChecksumAfterTransfer(true);
-		opts.setIntraFileStatusCallbacks(true);
-		TransferControlBlock tcb = DefaultTransferControlBlock.instance();
-		tcb.setTransferOptions(opts);
-		
-		TransferStatusCallbackListener tscl = new TransferStatusCallbackListener() {
-			@Override
-			public FileStatusCallbackResponse statusCallback(TransferStatus transferStatus) {
-				return FileStatusCallbackResponse.CONTINUE;
-			}
-
-			@Override
-			public void overallStatusCallback(TransferStatus transferStatus) {
-			}
-
-			@Override
-			public CallbackResponse transferAsksWhetherToForceOperation(String irodsAbsolutePath,
-					boolean isCollection) {
-				return CallbackResponse.YES_FOR_ALL;
-			}
-		};
-		
-		String sufixDir = whatToDownload.replace(IRODS_BASE, "");
-		
-		File temp = new File(whereToPut+sufixDir);
-		
-		if (!temp.exists())
-			temp.mkdirs();
-		//IRODSFile remoteFile = fileFactory.instanceIRODSFile("plots/");
-		IRODSFile toFetch = fileFactory.instanceIRODSFile(whatToDownload);
-		while (!toFetch.exists()) {
-			try {
-				System.out.println("THE PATH YOU ARE TRYING TO DOWNLOAD DIES NOT EXIST");
-				Thread.sleep(100);
-			} catch (InterruptedException e1) {
-				e1.printStackTrace();
-			}
-		}
-		
-		dataTransferOperationsAO.getOperation(toFetch, temp, tscl, tcb);
-		
-	}
-	
 	
 	/**
 	 * DOWNLOAD A FULL DIRECTORY FROM IRODS
@@ -323,10 +297,12 @@ public class IRODSManager {
 	 * @throws JargonException
 	 * @throws IOException
 	 */
-	public void readRemoteDirectory_validation(String whereToPut, String whatToDownload) throws JargonException, IOException {
+	public void downloadRemoteDirectory(String whereToPut, String whatToDownload) throws JargonException, IOException {
 
 		TransferOptions opts = new TransferOptions();
+		
 		//opts.setComputeAndVerifyChecksumAfterTransfer(true);
+		opts.setForceOption(ForceOption.ASK_CALLBACK_LISTENER);
 		opts.setIntraFileStatusCallbacks(true);
 		TransferControlBlock tcb = DefaultTransferControlBlock.instance();
 		tcb.setTransferOptions(opts);
@@ -352,7 +328,7 @@ public class IRODSManager {
 		int indx = sufixDir.lastIndexOf("/");
 		sufixDir = sufixDir.substring(0,indx);
 		
-		FileUtils.deleteDirectory(new File(whereToPut+sufixDir));
+		//FileUtils.deleteDirectory(new File(whereToPut+sufixDir));
 		
 		File temp = new File(whereToPut+sufixDir);
 		
@@ -371,13 +347,15 @@ public class IRODSManager {
 		
 		dataTransferOperationsAO.getOperation(toFetch, temp, tscl, tcb);
 		
+		dataTransferOperationsAO.closeSessionAndEatExceptions();
+		
 	}
 	
 	
 	public static void main1(String arg[]) throws JargonException, IOException {
 		
 		IRODSManager im = new IRODSManager();
-		String[] readAllRemoteFiles = im.readAllRemoteFiles("roots-arizona");
+		String[] readAllRemoteFiles = im.readAllRemoteFiles("roots-arizona","/tmp");
 		
 		System.out.println(readAllRemoteFiles.length);
 	}
@@ -407,7 +385,7 @@ public class IRODSManager {
 	}
 	
 	
-	public void readRemoteFile(String whereToPut, String whatToDownload) throws JargonException, IOException {
+	public void downloadRemoteFile(String whereToPut, String whatToDownload) throws JargonException, IOException {
 
 		TransferOptions opts = new TransferOptions();
 		opts.setComputeAndVerifyChecksumAfterTransfer(true);
@@ -446,6 +424,105 @@ public class IRODSManager {
 		}
 		dataTransferOperationsAO.getOperation(toFetch, temp, tscl, tcb);
 		
+		dataTransferOperationsAO.closeSessionAndEatExceptions();
+		
 	}
+	
+	
+	/**
+	 * 
+	 * @author sapmitra
+	 * @param sourceDir THE SOURCE DIRECTORY - eg. roots-arizona
+	 * @param destinationDir - WHERE YOU WANT roots-arizona.tar unzipped...USUALLY THE FS_ROOT DIRECTORY
+	 * @param tarFileName
+	 */
+	public static void createTarFile(String sourceDir, String destinationDir, String tarFileName) {
+		
+		String destFilePath = destinationDir+GALILEO_SEPARATOR+tarFileName;
+		
+		Path path = Paths.get(destFilePath);
+		
+		
+		File temp = new File(destFilePath);
+
+		try {
+			if (temp.exists()) {
+				temp.delete();
+			}
+			Files.deleteIfExists(path);
+			
+		} catch (IOException e) {
+			
+		}
+		
+		
+		File resultsDir = new File(destinationDir);
+		
+		if (!resultsDir.exists())
+			resultsDir.mkdirs();
+		
+		
+		TarArchiveOutputStream tarOs = null;
+		FileOutputStream fos = null;
+		GZIPOutputStream gos = null;
+		try {
+			
+			fos = new FileOutputStream(destFilePath);
+			//gos = new GZIPOutputStream(new BufferedOutputStream(fos));
+			tarOs = new TarArchiveOutputStream(fos);
+			addFilesToTarGZ(sourceDir, "", tarOs);
+			
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} finally {
+			try {
+				tarOs.close();
+				//gos.close();
+				fos.close();
+				
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+	}
+	
+	
+	
+	public static void addFilesToTarGZ(String filePath, String parent, TarArchiveOutputStream tarArchive) throws IOException {
+		File file = new File(filePath);
+		// Create entry name relative to parent file path
+		String entryName = parent + file.getName();
+		// add tar ArchiveEntry
+		
+		tarArchive.putArchiveEntry(new TarArchiveEntry(file, entryName));
+		if (file.isFile()) {
+			/*if(file.getName().contains("metadata")) {
+				return;
+			}*/
+			FileInputStream fis = new FileInputStream(file);
+			BufferedInputStream bis = new BufferedInputStream(fis);
+			// Write file content to archive
+			/*if(!file.getName().contains("metadata")) {
+				return;
+			}*/
+			IOUtils.copy(bis, tarArchive);
+			tarArchive.closeArchiveEntry();
+			bis.close();
+			fis.close();
+			
+		} else if (file.isDirectory()) {
+			// no need to copy any content since it is
+			// a directory, just close the outputstream
+			tarArchive.closeArchiveEntry();
+			// for files in the directories
+			for (File f : file.listFiles()) {
+				// recursively call the method for all the subdirectories
+				addFilesToTarGZ(f.getAbsolutePath(), entryName + File.separator, tarArchive);
+			}
+		}
+	}
+	
 	
 }

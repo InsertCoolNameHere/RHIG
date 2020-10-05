@@ -1,0 +1,23 @@
+#Ignored Files
+*.class
+*.group
+*.tree
+*.jar
+# Eclipse files
+.project
+.classpath
+.build
+.settings
+.externalToolBuilders
+.metadata
+webserver
+# Local dev files
+classes
+depcache
+build.properties
+# javadoc-generated documentation
+docs/api
+# Mac OS File Attributes
+.DS_Store
+# Binaries
+bin

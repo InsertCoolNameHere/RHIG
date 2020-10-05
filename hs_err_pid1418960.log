@@ -1,0 +1,21 @@
+#
+# A fatal error has been detected by the Java Runtime Environment:
+#
+#  SIGSEGV (0xb) at pc=0x00007f49502223eb, pid=1418960, tid=1418979
+#
+# JRE version: OpenJDK Runtime Environment 18.9 (11.0.8+10) (build 11.0.8+10)
+# Java VM: OpenJDK 64-Bit Server VM 18.9 (11.0.8+10, mixed mode, sharing, tiered, compressed oops, g1 gc, linux-amd64)
+# Problematic frame:
+# C  [libjimage.so+0x33eb]  ImageStrings::find(Endian*, char const*, int*, unsigned int)+0x6b
+#
+# Core dump will be written. Default location: Core dumps may be processed with "/usr/lib/systemd/systemd-coredump %P %u %g %s %t %c %h" (or dumping to /s/chopin/b/grad/sapmitra/workspace/RIG/core.1418960)
+#
+# If you would like to submit a bug report, please visit:
+#   https://bugzilla.redhat.com/enter_bug.cgi?product=Fedora&component=java-11-openjdk&version=32
+#
+
+---------------  S U M M A R Y ------------
+
+Command Line: -agentlib:jdwp=transport=dt_socket,suspend=y,address=localhost:43717 -javaagent:/s/chopin/b/grad/sapmitra/.eclipse/org.eclipse.platform_155965261_linux_gtk_x86_64/configuration/org.eclipse.osgi/9747/0/.cp/lib/javaagent-shaded.jar -Dfile.encoding=UTF-8 test.TestInitRIG
+
+Host: 

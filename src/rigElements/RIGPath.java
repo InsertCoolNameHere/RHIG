@@ -222,6 +222,13 @@ implements Iterable<RIGVertex<L, V>> {
 
         return labels;
     }
+    
+    public RIGVertex<L, V> getLeafVertex() {
+    	if(vertices.size() > 0)
+    		return vertices.get(vertices.size() - 1);
+    	else
+    		return null;
+    }
 
     public void sort(Comparator<? super RIGVertex<L, V>> c) {
         Collections.sort(vertices, c);

@@ -1,5 +1,6 @@
 package logging;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
@@ -14,8 +15,14 @@ public class LogFactory {
 		Logger logger = Logger.getLogger(className);
 		logger.setUseParentHandlers(false);
 		FileHandler f;
+		String logDir = File.separator+"tmp"+File.separator+"rhigLogs"+File.separator;
 		try {
-			f = new FileHandler("/s/chopin/b/grad/sapmitra/Documents/radix/rigLogs/"+logFileName);
+			File dir = new File(logDir);
+	         
+	        if(!dir.exists())
+	        	dir.mkdirs();
+	         
+			f = new FileHandler(logDir+logFileName);
 			f.setFormatter(new SimpleFormatter());
 			f.setLevel(Level.ALL);
 			logger.addHandler(f);

@@ -1,5 +1,9 @@
 package rigElements;
 
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.zip.Adler32;
+
 /**
  * The Node class should be treated as immutable, though immutable is not
  * enforced in the current design.
@@ -56,6 +60,7 @@ public class Node {
 	public long getHash() {
 		return sig;
 	}
+	
 	
 	
 }

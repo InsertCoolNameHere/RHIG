@@ -1,0 +1,45 @@
+<?xml version="1.0"?>
+<project name="RHIG" basedir="." default="jar">
+<target name="init">
+  <property name="build" value="./build" />
+  <property name="srcdir" value="./src" />
+  <property name="lib.dir" value="./lib" />
+  <property name="dist" value="./dist" />
+  <property name="version" value="1.0" />
+  <property name="debug" value="true" />
+  <path id="project.class.path">
+    <pathelement path="${java.class.path}" />
+    <fileset dir="${lib.dir}">
+      <include name="*.jar" />
+    </fileset>
+  </path>
+</target>
+ <target name="compile" depends="init">
+   <mkdir dir="${build}" />
+   <javac debug="${debug}"
+          optimize="${optimize}"
+          destdir="${build}"
+          deprecation="${deprecation}">
+     <src path="${srcdir}" />
+     <classpath refid="project.class.path" />
+   </javac>
+ </target>
+ <target name="jar" depends="compile">
+   <mkdir dir="${dist}" />
+   <jar destfile="${dist}/${ant.project.name}.jar">
+     <fileset dir="${build}">
+       <include name="src/*/*.class" />
+     </fileset>
+   </jar>
+ </target>
+<target name="package" depends="compile, jar">
+  <jar destfile="${dist}/${ant.project.name}-${version}.jar" basedir="${build}" includes="**/*.*">
+  	<zipfileset excludes="META-INF/**/*" src="${lib.dir}/jargon-core-4.2.2.0-RELEASE-jar-with-dependencies.jar"></zipfileset>
+    <manifest>
+       <attribute name="Main-Class" value="node.RIGMonitor" />
+    </manifest>
+    <zipgroupfileset dir="${lib.dir}" includes="*.jar" />
+    <zipgroupfileset dir="${dist}" includes="${ant.project.name}.jar" />
+  </jar>
+</target>
+</project>

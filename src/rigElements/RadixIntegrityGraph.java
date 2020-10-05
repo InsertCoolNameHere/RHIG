@@ -5,8 +5,10 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.logging.Logger;
@@ -368,6 +370,65 @@ public class RadixIntegrityGraph {
 		}
 		//path.get(index)
 		return path;
+	}
+
+	/**
+	 * RETURNS EVALUATED PATHS MAPPED TO THE LEAF VERTEX
+	 * @author sapmitra
+	 * @param query
+	 * @return
+	 */
+	public Map<String, RIGVertex<Feature, String>> evaluateQueryMap(Query query) {
+		List<String[]> featurePaths = new ArrayList<String[]>();
+		List<RIGVertex<Feature, String>> vertices = new ArrayList<RIGVertex<Feature, String>>();
+		
+		Map<String, RIGVertex<Feature, String>> rigpaths = new HashMap<String, RIGVertex<Feature, String>>();
+		
+		
+		// RETURN DIRECTORY/FILEPATHS....IF IT IS A DIRECTORY PATH, CALCULATE THE HASH OF THE DIRECTORY AFTER DOWNLOAD
+		List<RIGPath<Feature, String>> evaluatedPaths = hrig.evaluateQuery(query);
+		
+		if(query.getOperations() == null || query.getOperations().size() == 0 && evaluatedPaths.size() == 1) {
+			
+			rigpaths.put(evaluatedPaths.get(0).payload.iterator().next(), evaluatedPaths.get(0).getLeafVertex());
+			
+			return rigpaths;
+		}
+		
+		for (RIGPath<Feature, String> path : evaluatedPaths) {
+			String[] featureValues = new String[path.size()+1];
+			int index = 0;
+			for (Feature feature : path.getLabels())
+				featureValues[index++] = feature.getString();
+			featureValues[index] = getHashFromPayload(path.payload.iterator().next());
+			featurePaths.add(featureValues);
+			vertices.add(path.getLeafVertex());
+		}
+		
+		int i=0;
+		for(String[] ss : featurePaths) {
+			
+			String p = "";
+			int k = 0;
+			for(String s: ss) {
+				
+				if("X_root_X".equals(s)) {
+					p+=rootPath;
+				} else if(k == 0|| k == ss.length-1) {
+					p+=s;
+				} else if(k == ss.length-2) {
+					p+=s+"$$";
+				} else
+					p+=s+"/";
+				k++;
+			}
+			rigpaths.put(p, vertices.get(i));
+			i++;
+		}
+		
+		
+		return rigpaths;
+	
 	}
 	
 
