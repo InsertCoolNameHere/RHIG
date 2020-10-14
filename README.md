@@ -4,7 +4,7 @@ RHIG is a framework designed for the ROOTS-Subterra project that handles the ide
 
 The RADIX+ framework consists of the following components:
 1)	A Front-end Visualization Framework [Link](http://radix.cs.colostate.edu/)
-2)	Back-end Distributed Storage System for Pre-processing, Storage & Retrieval [Link] ([Link](https://bitbucket.org/InsertCoolNameHere/radix/))
+2)	Back-end Distributed Storage System for Pre-processing, Storage & Retrieval ([Link](https://bitbucket.org/InsertCoolNameHere/radix/))
 3)	Command-based Customizable Data Retrieval for the user with Integrity Check (RHIG)
 
 This repository contains the source code and deployment instructions for the RHIG. 
