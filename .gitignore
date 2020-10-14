@@ -2,7 +2,7 @@
 *.class
 *.group
 *.tree
-*.jar
+*RHIG.jar
 # Eclipse files
 .project
 .classpath
